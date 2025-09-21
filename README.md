@@ -51,7 +51,7 @@ msc-ai-individual-project-agentic-ai-learning/
 └── README.md
 ```
 
-Trained LoRA Adapters can be found [here](https://huggingface.co/LLM-Agents-Imperial).
+<!-- Trained LoRA Adapters can be found [here](https://huggingface.co/LLM-Agents-Imperial). -->
 
 
 ### Usage
