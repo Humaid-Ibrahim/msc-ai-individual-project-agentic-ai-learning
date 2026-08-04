@@ -3,7 +3,8 @@
 extract_hints.py – Extract structured, runtime-usable hints from FAILED trajectories
 by aligning them with the environment's ground-truth PDDL plan in traj_data.json.
 
-Add-on: supports GPT via OpenAI API with --llm_type GPTChat (or gptchat)
+Add-on: supports GPT via OpenAI API with --llm_type GPTChat (or gptchat).
+Set OPENAI_API_KEY in the environment before selecting GPTChat.
 """
 
 from __future__ import annotations
@@ -22,6 +23,17 @@ import pandas as pd
 
 # ----------------- GPT (OpenAI) MODEL -------------------
 # Minimal wrapper around OpenAI's Chat Completions API
+def _resolve_openai_api_key(api_key: Optional[str] = None) -> str:
+    """Return an injected/environment API key or fail before client creation."""
+    resolved = (api_key or os.getenv("OPENAI_API_KEY", "")).strip()
+    if not resolved:
+        raise RuntimeError(
+            "OPENAI_API_KEY is required when using GPTChat. "
+            "Set it in the environment or inject it through a secret manager."
+        )
+    return resolved
+
+
 class GPTChat:
     def __init__(self,
                  model: str = "gpt-4o-mini",
@@ -32,6 +44,8 @@ class GPTChat:
                  max_tokens: int = 600,
                  system_prompt: str = "You are a precise assistant. Reply exactly as requested.",
                  **kwargs):
+        resolved_api_key = _resolve_openai_api_key(api_key)
+
         # Lazy import to avoid dependency if unused
         try:
             from openai import OpenAI
@@ -41,9 +55,9 @@ class GPTChat:
             ) from e
 
 
-        # Instantiate client (env vars also work)
+        # Instantiate only after validating the credential source.
         self.client = OpenAI(
-            api_key=api_key or os.getenv("OPENAI_API_KEY"),
+            api_key=resolved_api_key,
             base_url=base_url or os.getenv("OPENAI_BASE_URL") or None,
             organization=organization or os.getenv("OPENAI_ORG") or None,
         )
@@ -133,10 +147,9 @@ def get_agent_and_model(llm_type,
                   f"[WARN] Proposed OpenAI model '{proposed_model}' not in known list; falling back to {default}.")
             if not force_model:
                 model = default
-        openai_api_key = "REVOKED_OPENAI_API_KEY"
         agent = GPTChat(
             model=model,
-            api_key=openai_api_key or os.getenv("OPENAI_API_KEY"),
+            api_key=openai_api_key,
             base_url=openai_base_url or os.getenv("OPENAI_BASE_URL"),
             organization=openai_org or os.getenv("OPENAI_ORG"),
             temperature=temperature,
@@ -497,7 +510,6 @@ def main(args) -> None:
         proposed_model=args.model,
         force_model=args.force_model,
         max_tokens=args.max_tokens,
-        openai_api_key=args.openai_api_key,
         openai_base_url=args.openai_base_url,
         openai_org=args.openai_org,
         max_model_len=args.max_model_len,   # ignored by GPTChat
@@ -629,8 +641,7 @@ def _cli():
     ap.add_argument("--gpus", type=int, default=1, help="Tensor parallel size for local models")
     ap.add_argument("--seed", type=int, default=42, help="Random seed")
 
-    # OpenAI keys (optional; env vars also work)
-    ap.add_argument("--openai_api_key", default=os.getenv("OPENAI_API_KEY", ""), help="OpenAI API key")
+    # OpenAI configuration. Credentials are accepted only via OPENAI_API_KEY.
     ap.add_argument("--openai_base_url", default=os.getenv("OPENAI_BASE_URL", ""), help="Custom OpenAI base URL (Azure, proxy, etc.)")
     ap.add_argument("--openai_org", default=os.getenv("OPENAI_ORG", ""), help="OpenAI organization id")
 

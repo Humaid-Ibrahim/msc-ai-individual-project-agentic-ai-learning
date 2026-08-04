@@ -1,0 +1,17 @@
+title = "Agentic AI learning repository secret scanning"
+
+[extend]
+useDefault = true
+
+# Stored notebook output contains a benign eight-character analytics label
+# immediately after this metric name. Scope the exception to that exact output
+# shape and those two notebooks; all built-in credential rules stay enabled.
+[[allowlists]]
+description = "Ignore benign ALFWorld analytics header in saved notebook output"
+regexTarget = "match"
+paths = [
+  '''(^|/)alfworld_runs/analysis_alfworld(_eval_notebook)?\.ipynb$''',
+]
+regexes = [
+  '''avg_history_token,\s*[A-Za-z_][A-Za-z0-9_]{7}\\n''',
+]

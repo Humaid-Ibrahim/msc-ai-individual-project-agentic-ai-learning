@@ -1,0 +1,18 @@
+.venv-*/
+unsloth_compiled_cache/
+
+# Local credentials and secret-manager shells
+.env
+.env.*
+!.env.example
+.envrc
+.direnv/
+*.key
+*.pem
+
+# Python/test artifacts
+__pycache__/
+.pytest_cache/
+
+# Secret-scanner reports may contain sensitive metadata
+gitleaks-report.*

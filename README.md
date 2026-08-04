@@ -123,3 +123,10 @@ docker run -it --rm -p 3000:3000 \
 ```
 
 Once running, the WebShop environment will be accessible at:`http://localhost:3000`. The agent will then interact with it via HTTP requests.
+
+### Security
+
+OpenAI-backed hint generation requires `OPENAI_API_KEY` in the environment; do
+not put credentials in source files or command-line arguments. See
+[SECURITY.md](SECURITY.md) for local secret scanning and credential-remediation
+instructions.
